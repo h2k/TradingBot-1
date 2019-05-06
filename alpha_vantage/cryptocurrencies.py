@@ -12,16 +12,6 @@ class CryptoCurrencies(av):
             market: The exchange market of your choice.
             It can be any of the market in the market list. For example: market=CNY.
     """
-    @av._output_format
-    @av._call_api_on_func
-    def get_digital_currency_intraday(self, symbol, market):
-        """ Returns the intraday (with 5-minute intervals) time series for a
-        digital currency (e.g., BTC) traded on a specific market
-        (e.g., CNY/Chinese Yuan), updated realtime. Prices and volumes are
-        quoted in both the market-specific currency and USD.
-        """
-        _FUNCTION_KEY = 'DIGITAL_CURRENCY_INTRADAY'
-        return _FUNCTION_KEY, 'Time Series (Digital Currency Intraday)', 'Meta Data'
 
     @av._output_format
     @av._call_api_on_func

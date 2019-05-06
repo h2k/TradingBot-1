@@ -2,7 +2,7 @@ import requests
 import os
 from functools import wraps
 import inspect
-import sys
+import time
 try:
     import pandas
     _PANDAS_FOUND = True
@@ -131,6 +131,10 @@ class AlphaVantage(object):
         @wraps(func)
         def _format_wrapper(self, *args, **kwargs):
             call_response, data_key, meta_data_key = func(self, *args, **kwargs)
+            if "Note" in call_response:
+                # 5 calls per minute
+                time.sleep(60)
+                call_response, data_key, meta_data_key = func(self, *args, **kwargs)
             if 'json' in self.output_format.lower() or 'pandas' in self.output_format.lower():
                 data = call_response[data_key]
                 if meta_data_key is not None:

@@ -1,3 +1,4 @@
+import time
 from .alphavantage import AlphaVantage as av
 from functools import wraps
 try:
@@ -34,10 +35,13 @@ class SectorPerformances(av):
         @wraps(func)
         def _format_wrapper(self, *args, **kwargs):
             json_response, data_key, meta_data_key = func(self, *args, **kwargs)
+            if "Note" in json_response:
+                # 5 calls per minute
+                time.sleep(60)
+                json_response, data_key, meta_data_key = func(self, *args, **kwargs)
             if isinstance(data_key, list):
                 # Replace the strings into percentage
-                data = {key: {k: self.percentage_to_float(v)
-                              for k, v in json_response[key].items()} for key in data_key}
+                data = {key: {k: v for k, v in json_response[key].items()} for key in data_key}
             else:
                 data = json_response[data_key]
             # TODO: Fix orientation in a better way

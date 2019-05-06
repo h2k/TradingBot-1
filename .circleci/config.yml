@@ -1,0 +1,31 @@
+# Python CircleCI 2.0 configuration file for TradingBot
+# Builds TradingBot
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-Trading-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-Trading-dependencies-
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run: 
+          command: |
+            source venv/bin/activate
+            python tests/test_alphavantage.py
+            python tests/test_trading.py
+            deactivate
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-Trading-dependencies-{{ checksum "requirements.txt" }}
