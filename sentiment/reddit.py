@@ -29,7 +29,7 @@ class RedditSentiment(object):
         reddit = praw.Reddit(**self.config)
         if reddit:
             posts = reddit.subreddit(term).hot(limit=100)
-            return [SentimentMessage(post.selftext) for post in posts]
+            return [SentimentMessage(post.selftext) for post in posts if len(post.selftext) > 0]
 
     def _get_sentiment_from_wayback(self, term: str, date):
         date_str = f'{date.year}{date.month:02d}{date.day:02d}'

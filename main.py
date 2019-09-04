@@ -1,11 +1,12 @@
 from datetime import datetime
+import json
 from predication import Engine
 from stocks import StockDatabase
 
 API_KEY_TEST = '84WDI082Z0HOREL6'
 INTERVAL = "60min"
 TIME_SERIES = "day"
-TEST_STOCKS = ["LYFT", "FB", "MSFT", "AMZN", "PIHPP", "PIH", "AAPL", "NDAQ"]
+TEST_STOCKS = ["AMZN"]
 
 
 def main():
