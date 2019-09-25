@@ -546,7 +546,7 @@ def chart_div(pair):
                         n_clicks_timestamp=2,
                     ),
                     html.Span(
-                        "Studies",
+                        "Indicateurs",
                         id=pair + "studies_header",
                         className="span-menu",
                         n_clicks_timestamp=1,
