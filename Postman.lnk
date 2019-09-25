@@ -1,0 +1,212 @@
+{
+	"info": {
+		"_postman_id": "c860ca07-7b67-4162-a5ac-fee21570c89a",
+		"name": "PoolTrade",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Stocks",
+			"item": [
+				{
+					"name": "Search stock",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/trading/stocks/search/?name=Apple",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"trading",
+								"stocks",
+								"search",
+								""
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Apple"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get stocks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/trading/stocks/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"trading",
+								"stocks",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Analyze stocks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/trading/stocks/analyze/AAPL",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"trading",
+								"stocks",
+								"analyze",
+								"AAPL"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Tasks",
+			"item": [
+				{
+					"name": "Delete task",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/trading/tasks/6760449e-685f-4b86-9e34-d57b224f6a50",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"trading",
+								"tasks",
+								"6760449e-685f-4b86-9e34-d57b224f6a50"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tasks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/trading/tasks/search/?status=finished",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"trading",
+								"tasks",
+								"search",
+								""
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "finished"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Task",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/trading/tasks/c6b37be7-7164-4420-96ef-1f0e4dd3a0d6",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"trading",
+								"tasks",
+								"c6b37be7-7164-4420-96ef-1f0e4dd3a0d6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/trading/tasks/4068dd96-6ad8-4895-bc3c-7be133933906",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"trading",
+								"tasks",
+								"4068dd96-6ad8-4895-bc3c-7be133933906"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

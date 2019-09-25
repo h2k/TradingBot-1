@@ -17,6 +17,7 @@ This project is divided in 2 main parts :
 
  - Start the rq worker : ```rq worker trading-tasks```
  - Start the flask API : ```python3 app.py```
+ - You can test using the provided Postman file
  
 **Job results are stored for 24 hours**
 
