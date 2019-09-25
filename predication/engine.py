@@ -27,7 +27,7 @@ class Engine(object):
 
     def generate_stock_sentiment(self, stock):
         if not os.path.exists(self.sentiment_filename):
-            tweets = self.twitter.get_tweets(f'{stock.name}, {stock.symbol}', since=stock.entry_year, count=1000)
+            tweets = self.twitter.get_tweets(f'{stock.name}, {stock.symbol}', since=f'{stock.entry_year}-01-01', count=1000)
             with open(self.sentiment_filename, 'w') as tweet_file:
                 for tweet in tweets:
                     tweet_file.write(tweet.csv_dump())
@@ -101,6 +101,7 @@ class Engine(object):
         else:
             plt.show()
         tf.reset_default_graph()
+        return f'{self.dir}/{self.stock.symbol}-plot.png'
 
     @staticmethod
     def process_data(in_data):

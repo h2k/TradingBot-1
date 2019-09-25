@@ -1,24 +1,160 @@
-from datetime import datetime
-import json
-from predication import Engine
-from stocks import StockDatabase
+import rq
+from rq.job import Job, JobStatus
+from rq.registry import (
+    StartedJobRegistry,
+    FinishedJobRegistry,
+    FailedJobRegistry
+)
+from flask import (
+    Flask,
+    jsonify,
+    request,
+    make_response
+)
+from redis import Redis
+from stocks import (
+    StockDatabase,
+)
 
-API_KEY_TEST = '84WDI082Z0HOREL6'
-INTERVAL = "60min"
-TIME_SERIES = "day"
-TEST_STOCKS = ["AMZN"]
+queue_name = "trading-tasks"
+db = StockDatabase('84WDI082Z0HOREL6')
+tasks = []
+app = Flask(__name__)
+redis = Redis.from_url("redis://localhost:6379")
+# ----------------- QUEUES -----------------
+queue = rq.Queue(queue_name, connection=redis)
+started_jobs = StartedJobRegistry(queue_name, connection=redis)
+failed_jobs = FailedJobRegistry(queue_name, connection=redis)
+finished_jobs = FinishedJobRegistry(queue_name, connection=redis)
 
 
-def main():
-    db = StockDatabase(API_KEY_TEST)
+# ----------------- STOCKS -----------------
+
+@app.route('/api/trading/stocks/suggest/', methods=["POST"])
+def suggest_stock():
+    return make_response(jsonify(None), 404)
+
+
+@app.route('/api/trading/stocks/search/', methods=["GET"])
+def search_stock():
+    """
+    Describes a specific stock
+    Enables search by name or symbol
+    :return:
+    """
+    symbol = request.args.get("symbol", "<>")
+    name = request.args.get("name", "<>").lower()
+    found = []
     for stock in db.stocks:
-        if stock.symbol in TEST_STOCKS:
-            filename = db.generate_stock_history(stock, time_series=TIME_SERIES, output_size="full", interval=INTERVAL)
-            print(f'[{datetime.now()}][+] Generated data for {stock.name} ({stock.symbol}) - {stock.sector}')
-            engine = Engine(stock, filename)
-            print(f'[{datetime.now()}][+] Starting training model...')
-            engine.train_model(save_results=True)
+        if stock.symbol == symbol or name in stock.name.lower():
+            found.append(stock)
+    if found is not None:
+        return make_response(jsonify([stock.to_json() for stock in found]), 200)
+    return make_response(jsonify(None), 404)
+
+
+@app.route('/api/trading/stocks/', methods=["GET"])
+def stats():
+    """
+    Retrieves stats on all the available stocks
+    :return:
+    """
+    return make_response(jsonify([stock.to_json() for stock in db.stocks]), 200)
+
+
+@app.route('/api/trading/stocks/analyze/<to_analyze>', methods=["GET"])
+def analyze_stock(to_analyze):
+    to_analyze = to_analyze.upper()
+    for stock in db.stocks:
+        if stock.symbol == to_analyze:
+            filename = db.generate_stock_history(stock, time_series="day", output_size="full", interval="60min")
+            job = queue.enqueue("tasks.predict", args=(stock, filename), job_timeout=1200, result_ttl=86400)
+            job.meta["stock"] = stock.symbol
+            job.save_meta()
+            json = {
+                "success": True,
+                "task": {"id": job.id, "result": job.return_value,
+                         "created_at": job.created_at, "started_at": job.started_at,
+                         "ended_at": job.ended_at, "status": job.get_status(),
+                         "meta": job.meta
+                }
+            }
+            return make_response(jsonify(json), 200)
+    return make_response(jsonify({"success": False, "message": f'Stock {to_analyze} not found in our database'}), 404)
+
+
+# ----------------- TASKS -----------------
+@app.route('/api/trading/tasks/search/', methods=["GET"])
+def search_tasks():
+    """
+    Retrieves all the tasks based on status
+    :return:
+    """
+    status = request.args.get("status", "").lower()
+    if status != "" and status not in [enum_val.lower() for enum_val in JobStatus.__dict__.keys()]:
+        return make_response({"success": False, "message": f'Unknown status {status}'})
+    jobs = []
+    json_jobs = []
+    # RUNNING JOBS
+    if status == "" or (status != "finished" and status != "failed"):
+        jobs.extend([queue.fetch_job(id) for id in started_jobs.get_job_ids()])
+    # FINISHED JOBS
+    if status == "" or status == "finished":
+        jobs.extend(Job.fetch_many(finished_jobs.get_job_ids(), connection=redis))
+    # FAILED JOBS
+    if status == "" or status == "failed":
+        jobs.extend([queue.fetch_job(id) for id in failed_jobs.get_job_ids()])
+    # Change them to human readable format
+    for job in jobs:
+        json_jobs.append({"id": job.id, "result": job.return_value,
+                          "created_at": job.created_at, "started_at": job.started_at,
+                          "ended_at": job.ended_at, "status": job.get_status(),
+                          "meta": job.meta})
+    return make_response(jsonify(json_jobs), 200)
+
+
+@app.route('/api/trading/tasks/<task_id>', methods=["PUT"])
+def update_task(task_id):
+    """
+    Relaunch a failed task
+    :return:
+    """
+    j = queue.fetch_job(task_id)
+    if j is not None:
+        # Only failed task can be updated
+        if j.get_status() != "failed":
+            return make_response('', 400)
+        failed_jobs.requeue(j)
+        return make_response('', 204)
+    return make_response('', 404)
+
+
+@app.route('/api/trading/tasks/<task_id>', methods=["GET"])
+def get_task(task_id):
+    """
+    Retrieves task with uuid
+    :return:
+    """
+    job = queue.fetch_job(task_id)
+    if job is not None:
+        return make_response(jsonify({"id": job.id, "result": job.return_value,
+                                      "created_at": job.created_at, "started_at": job.started_at,
+                                      "ended_at": job.ended_at, "status": job.get_status()}), 200)
+    return make_response(jsonify(None), 404)
+
+
+@app.route('/api/trading/tasks/<task_id>', methods=["DELETE"])
+def delete_task(task_id):
+    """f
+    Deletes a task based on uuid
+    :return:
+    """
+    j = queue.fetch_job(task_id)
+    if j is not None:
+        j.delete()
+        return make_response('', 204)
+    return make_response('', 404)
 
 
 if __name__ == "__main__":
-    main()
+    app.run(port=8000, debug=True)

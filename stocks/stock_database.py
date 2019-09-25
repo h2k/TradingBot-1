@@ -10,15 +10,12 @@ from .stock import Stock
 
 class StockDatabase(object):
     """Download all the available values of known stock"""
-    crypto_url = "https://www.ddddd.com"
-    nasdaq_url = "https://www.nasdaq.com/screening/companies-by-industry.aspx?exchange=NASDAQ&render=download"
+    nasdaq_url = "https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download"
     stock_filename = "stock_estimations/companylist"
-    crypto_filename = "stock_estimations/cryptoList"
 
     def __init__(self, api_key):
         self.ts = TimeSeries(key=api_key, output_format='pandas', indexing_type='date')
         self.cc = CryptoCurrencies(key=api_key, output_format='pandas', indexing_type='date')
-        self.crypto_stockfile = f'{self.crypto_filename}-{datetime.datetime.fromtimestamp(time.time()).strftime("%Y%m%d")}.csv'
         self.nasdaq_stockfile = f'{self.stock_filename}-{datetime.datetime.fromtimestamp(time.time()).strftime("%Y%m%d")}.csv'
         self.stocks = []
         os.makedirs("stock_estimations", exist_ok=True)
@@ -46,16 +43,6 @@ class StockDatabase(object):
             for index, row in data.iterrows():
                 out.write(f'{index.replace("-", "")},{row.iloc[0]}\n')
         return filename
-
-    def _download_crypto_stocks(self):
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        yesterday_file = f'{self.crypto_filename}-{yesterday.strftime("%Y%m%d")}.csv'
-        if os.path.exists(yesterday_file):
-            os.remove(yesterday_file)
-        if os.path.exists(self.nasdaq_stockfile):
-            return
-        else:
-            urllib.request.urlretrieve(self.crypto_url, self.crypto_stockfile)
 
     def _download_nasdaq_stocks(self):
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)

@@ -7,15 +7,15 @@ class Stock(object):
             self.price = float(values[2])
         except ValueError:
             self.price = 9999
-        if values[5] == "n/a":
-            self.entry_year = "2015-01-01"
-        else:
-            self.entry_year = f'{values[5]}-01-01'
-        self.sector = values[6]
-        self.industry = values[7]
+        self.entry_year = values[4]
+        self.sector = values[5]
+        self.industry = values[6]
         self.risk = 0
         self.quantity_to_buy = 0
-        self.is_crypto = False
+
+    def to_json(self):
+        return {"symbol": self.symbol, "name": self.name, "price": self.price, "sector": self.sector, "industry": self.industry,
+                "entry_year": self.entry_year}
 
     @staticmethod
     def from_nasdaq(values):
