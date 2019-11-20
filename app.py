@@ -1,9 +1,10 @@
 import rq
+from predication import SuggestionEngine
 from rq.job import Job, JobStatus
 from rq.registry import (
     StartedJobRegistry,
     FinishedJobRegistry,
-    FailedJobRegistry
+    FailedJobRegistry,
 )
 from flask import (
     Flask,
@@ -28,11 +29,79 @@ failed_jobs = FailedJobRegistry(queue_name, connection=redis)
 finished_jobs = FinishedJobRegistry(queue_name, connection=redis)
 
 
+# ----------------- TRADE -----------------
+
+@app.route('/api/trading/trade/', methods=["POST"])
+def trade():
+    if request.is_json:
+        content = request.get_json()
+        symbol = content.get("symbol", None)
+        user = content.get("user", None)
+        if symbol is not None and user is not None:
+            # Check if symbol exist
+            found = False
+            for stock in db.stocks:
+                if stock.symbol == symbol:
+                    found = True
+                    break
+            if not found:
+                return make_response(jsonify({"error": f"Unknown symbol '{symbol}'"}), 403)
+            job = queue.enqueue("tasks.trade", args=(symbol, user), job_timeout=12000, result_ttl=86400)
+            job.meta["symbol"] = symbol
+            job.meta["user"] = user
+            job.save_meta()
+            json = {
+                "success": True,
+                "task": {
+                    "id": job.id, "result": job.return_value,
+                    "created_at": job.created_at, "started_at": job.started_at,
+                    "ended_at": job.ended_at, "status": job.get_status(),
+                    "meta": job.meta
+                }
+            }
+            return make_response(jsonify(json), 200)
+    return make_response(jsonify(None), 403)
+
+
 # ----------------- STOCKS -----------------
+
 
 @app.route('/api/trading/stocks/suggest/', methods=["POST"])
 def suggest_stock():
-    return make_response(jsonify(None), 404)
+    """
+    Suggest a stock within a price range
+    :return:
+    """
+    MAX_SYMBOLS = 5
+    if request.is_json:
+        content = request.get_json()
+        symbols = content.get("symbols", None)
+        if symbols is not None:
+            if len(symbols) > MAX_SYMBOLS:
+                return make_response(jsonify({"error": f"Too many symbols (max {MAX_SYMBOLS})"}), 403)
+            # Check if symbols exist
+            for symbol in symbols:
+                found = False
+                for stock in db.stocks:
+                    if stock.symbol == symbol:
+                        found = True
+                        break
+                if not found:
+                    return make_response(jsonify({"error": f"Unknown symbol '{symbol}'"}), 403)
+            job = queue.enqueue("tasks.suggest", args=(symbols,), job_timeout=1200, result_ttl=86400)
+            job.meta["symbols"] = symbols
+            job.save_meta()
+            json = {
+                "success": True,
+                "task": {
+                    "id": job.id, "result": job.return_value,
+                    "created_at": job.created_at, "started_at": job.started_at,
+                    "ended_at": job.ended_at, "status": job.get_status(),
+                    "meta": job.meta
+                }
+            }
+            return make_response(jsonify(json), 200)
+    return make_response(jsonify(None), 403)
 
 
 @app.route('/api/trading/stocks/search/', methods=["GET"])
@@ -54,7 +123,7 @@ def search_stock():
 
 
 @app.route('/api/trading/stocks/', methods=["GET"])
-def stats():
+def stocks():
     """
     Retrieves stats on all the available stocks
     :return:
@@ -104,6 +173,9 @@ def search_tasks():
     # FAILED JOBS
     if status == "" or status == "failed":
         jobs.extend([queue.fetch_job(id) for id in failed_jobs.get_job_ids()])
+    # QUEUED JOBS
+    if status == "" or status == "queued":
+        jobs.extend(queue.get_jobs())
     # Change them to human readable format
     for job in jobs:
         json_jobs.append({"id": job.id, "result": job.return_value,

@@ -88,7 +88,6 @@ class Engine(object):
         test_y = scaler.inverse_transform(test_y)
         yhat = scaler.inverse_transform(yhat)
         print(f'[{datetime.now()}][+] Model trained')
-
         plt.clf()
         plt.title(f'{self.stock.name} ({self.stock.symbol}) - Estimation')
         plt.plot(yhat, label=f'Prediction (RMSE : {rmse_sent})')

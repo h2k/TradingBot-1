@@ -9,6 +9,7 @@ This project is divided in 2 main parts :
  - Python 3.7 (`python3`)
  - Virtualenv (`venv`)
  - Redis
+ - rq
  - All packages from `requirements.txt`
 
 ## Trading AI
@@ -17,9 +18,11 @@ This project is divided in 2 main parts :
 
  - Start the rq worker : ```rq worker trading-tasks```
  - Start the flask API : ```python3 app.py```
- - You can test using the provided Postman file
+ - You can test using the provided Postman file : `PoolTrade.postman_collection.json`
  
 **Job results are stored for 24 hours**
+
+**Testing trading requires an account**
 
 ## Dashboard
 
