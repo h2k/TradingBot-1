@@ -43,7 +43,7 @@ def trade(bearer):
     ret = {
         "suggested": {
             "buy": [],
-            "sell": []
+            "sell": [],
         },
         "checked_symbols": [],
         "actions": []
@@ -60,7 +60,7 @@ def trade(bearer):
         symbols_to_check.extend(suggestion["sell"])
         ret["suggested"]["sell"] = suggestion["sell"]
     if len(user.inventory):
-        symbols_to_check.extend([item["stock"]["name"] for item in user.inventory])
+        symbols_to_check.extend([item["stock"]["symbol"] for item in user.inventory])
     # Run a check on all the user inventory + suggested trade offers (both sell and buy)
     ret["checked_symbols"] = symbols_to_check
     for symbol in symbols_to_check:
