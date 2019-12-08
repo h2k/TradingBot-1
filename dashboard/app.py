@@ -1,15 +1,12 @@
 import json
-import base64
 import datetime
 import requests
 import pathlib
 import math
 import pandas as pd
-import flask
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.plotly as py
 import plotly.graph_objs as go
 
 from dash.dependencies import Input, Output, State

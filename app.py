@@ -1,5 +1,4 @@
 import rq
-from predication import SuggestionEngine
 from rq.job import Job, JobStatus
 from rq.registry import (
     StartedJobRegistry,
@@ -31,24 +30,13 @@ finished_jobs = FinishedJobRegistry(queue_name, connection=redis)
 
 # ----------------- TRADE -----------------
 
-@app.route('/api/trading/trade/', methods=["POST"])
+@app.route('/api/trading/trade', methods=["POST"])
 def trade():
     if request.is_json:
         content = request.get_json()
-        symbol = content.get("symbol", None)
-        user = content.get("user", None)
-        if symbol is not None and user is not None:
-            # Check if symbol exist
-            found = False
-            for stock in db.stocks:
-                if stock.symbol == symbol:
-                    found = True
-                    break
-            if not found:
-                return make_response(jsonify({"error": f"Unknown symbol '{symbol}'"}), 403)
-            job = queue.enqueue("tasks.trade", args=(symbol, user), job_timeout=12000, result_ttl=86400)
-            job.meta["symbol"] = symbol
-            job.meta["user"] = user
+        user = content.get("user_token", None)
+        if user is not None:
+            job = queue.enqueue("tasks.trade", args=(user,), job_timeout=12000, result_ttl=86400)
             job.save_meta()
             json = {
                 "success": True,
@@ -60,7 +48,9 @@ def trade():
                 }
             }
             return make_response(jsonify(json), 200)
-    return make_response(jsonify(None), 403)
+        else:
+            return make_response(jsonify({"error": "Must include user's bearer token"}), 400)
+    return make_response(jsonify(None), 400)
 
 
 # ----------------- STOCKS -----------------
@@ -78,7 +68,7 @@ def suggest_stock():
         symbols = content.get("symbols", None)
         if symbols is not None:
             if len(symbols) > MAX_SYMBOLS:
-                return make_response(jsonify({"error": f"Too many symbols (max {MAX_SYMBOLS})"}), 403)
+                return make_response(jsonify({"error": f"Too many symbols (max {MAX_SYMBOLS})"}), 400)
             # Check if symbols exist
             for symbol in symbols:
                 found = False
@@ -87,7 +77,7 @@ def suggest_stock():
                         found = True
                         break
                 if not found:
-                    return make_response(jsonify({"error": f"Unknown symbol '{symbol}'"}), 403)
+                    return make_response(jsonify({"error": f"Unknown symbol '{symbol}'"}), 400)
             job = queue.enqueue("tasks.suggest", args=(symbols,), job_timeout=1200, result_ttl=86400)
             job.meta["symbols"] = symbols
             job.save_meta()
@@ -101,7 +91,7 @@ def suggest_stock():
                 }
             }
             return make_response(jsonify(json), 200)
-    return make_response(jsonify(None), 403)
+    return make_response(jsonify(None), 400)
 
 
 @app.route('/api/trading/stocks/search/', methods=["GET"])

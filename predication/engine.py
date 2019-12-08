@@ -15,6 +15,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 class Engine(object):
+    """
+    Prediction engine using Sentiment analysis
+    """
     def __init__(self, stock, price_filename: str):
         self.stock = stock
         self.dir = os.path.dirname(price_filename)

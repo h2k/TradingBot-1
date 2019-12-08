@@ -41,9 +41,9 @@ class SuggestionEngine(object):
                                 'volatilite du stock': volatilities * 252})
         ret = {
             "buy": {
-                "low_risk": [],
-                "medium_risk": [],
-                "high_risk": []
+                "low": [],
+                "medium": [],
+                "high": []
             },
             "sell": [],
             "result": None
@@ -65,11 +65,11 @@ class SuggestionEngine(object):
                 # Check risk threshold
                 risk = combine.iloc[i, 1]
                 if self.low_risk_range[0] <= risk <= self.low_risk_range[1]:
-                    ret["buy"]["low_risk"].append(self.symbols[i])
+                    ret["buy"]["low"].append(self.symbols[i])
                 elif self.medium_risk_range[0] <= risk <= self.medium_risk_range[1]:
-                    ret["buy"]["medium_risk"].append(self.symbols[i])
+                    ret["buy"]["medium"].append(self.symbols[i])
                 else:
-                    ret["buy"]["high_risk"].append(self.symbols[i])
+                    ret["buy"]["high"].append(self.symbols[i])
             plt.annotate(self.symbols[i], (combine.iloc[i, 1], combine.iloc[i, 0]))
         filename = f'{next(tempfile._get_candidate_names())}-plot.png'
         plt.savefig(filename)
