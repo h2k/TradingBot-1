@@ -40,6 +40,14 @@ def trade(bearer):
     # Load model
     model = None
     save_file = os.path.join(os.getcwd(), "trade_model.pkl")
+    ret = {
+        "suggested": {
+            "buy": [],
+            "sell": []
+        },
+        "checked_symbols": [],
+        "actions": []
+    }
     with open(save_file, "rb") as model_file:
         model = pickle.load(model_file)
     # Append suggested buy trade to list of checks
@@ -47,12 +55,14 @@ def trade(bearer):
     symbols_to_check = []
     if len(suggestion["buy"][user.get_risk()]):
         symbols_to_check.extend(suggestion["buy"][user.get_risk()])
+        ret["suggested"]["buy"] = suggestion["buy"][user.get_risk()]
     if len(suggestion["sell"]):
         symbols_to_check.extend(suggestion["sell"])
+        ret["suggested"]["sell"] = suggestion["sell"]
     if len(user.inventory):
         symbols_to_check.extend([item["stock"]["name"] for item in user.inventory])
     # Run a check on all the user inventory + suggested trade offers (both sell and buy)
-    actions_taken = []
+    ret["checked_symbols"] = symbols_to_check
     for symbol in symbols_to_check:
         data, _ = ts.get_daily(symbol=symbol, outputsize="compact")
         parameters = [data['4. close'].tolist(), data['5. volume'].tolist()]
@@ -67,5 +77,5 @@ def trade(bearer):
         last_data = data.tail(1)
         action = agent.trade([last_data["4. close"].tolist()[0], last_data["5. volume"].tolist()[0]])
         if action is not None:
-            actions_taken.append(action)
-    return actions_taken
+            ret["actions"].append(action)
+    return ret
