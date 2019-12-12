@@ -1,6 +1,7 @@
 import os
 import base64
 import pickle
+import time
 import numpy as np
 from predication import *
 from alpha_vantage import TimeSeries
@@ -63,7 +64,9 @@ def trade(bearer):
         symbols_to_check.extend([item["stock"]["symbol"] for item in user.inventory])
     # Run a check on all the user inventory + suggested trade offers (both sell and buy)
     ret["checked_symbols"] = symbols_to_check
+    time.sleep(60)
     for symbol in symbols_to_check:
+        print(f"TradingAgent: Checking {symbol}...")
         data, _ = ts.get_daily(symbol=symbol, outputsize="compact")
         parameters = [data['4. close'].tolist(), data['5. volume'].tolist()]
         minmax = MinMaxScaler(feature_range=(100, 200)).fit(np.array(parameters).T)
@@ -75,7 +78,9 @@ def trade(bearer):
         # Feed 20 days
         agent.load_window(data.iloc[0:-20])
         last_data = data.tail(1)
+        print(f"Data loaded for {symbol}, taking decision...")
         action = agent.trade([last_data["4. close"].tolist()[0], last_data["5. volume"].tolist()[0]])
         if action is not None:
             ret["actions"].append(action)
+        print(f"Action for {symbol} : {action}")
     return ret

@@ -186,9 +186,11 @@ class TestTrading(unittest.TestCase):
         """
         ts = TimeSeries(API_KEY, output_format="pandas")
         # Containing old historical data (picked from https://en.wikipedia.org/wiki/List_of_S%26P_500_companies)
-        training_stocks = ["AMD", "FSV", "ROKU", "TMUS", "FTNT", "UAL", "TRIP", "TXN", "LYFT", "FSV", "SINA", "DISH"]
+        training_stocks = ["AMD", "FSV", "ROKU", "TMUS", "FTNT", "KHC", "TRIP", "TXN", "LYFT", "FSV", "SINA", "BIIB"]
         # Interesting stocks to tests onto
-        test_stocks = ["MSFT", "AAPL", "FB", "ADBE", "CTXS"]
+        up_trends = ["MSFT", "AAPL", "FB", "ADBE", "CTXS"]
+        down_trends = ["ALGN", "MYL", "AAL"]
+        test_stocks = up_trends + down_trends
         skip = 1
         layer_size = 500
         # 1500 dollars should always be enough
